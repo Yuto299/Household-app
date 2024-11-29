@@ -8,7 +8,9 @@ const MonthlySummary = () => {
     <Grid container spacing={{ xs: 1, sm: 2 }} mb={2}>
       {/* 収入 */}
       <Grid item xs={4} display={'flex'} flexDirection={'column'}>
-        <Card sx={{ bgcolor: 'blue', color: 'white', borderRadius: '10px', flexGrow: 1 }}>
+        <Card
+          sx={{ bgcolor: (theme) => theme.palette.incomeColor.main, color: 'white', borderRadius: '10px', flexGrow: 1 }}
+        >
           <CardContent sx={{ padding: { xs: 1, sm: 2 } }}>
             <Stack direction={'row'}>
               <ArrowUpwardIcon sx={{ fontSize: '2rem' }} />
@@ -27,7 +29,14 @@ const MonthlySummary = () => {
       </Grid>
       {/* 支出 */}
       <Grid item xs={4} display={'flex'} flexDirection={'column'}>
-        <Card sx={{ bgcolor: 'red', color: 'white', borderRadius: '10px', flexGrow: 1 }}>
+        <Card
+          sx={{
+            bgcolor: (theme) => theme.palette.expenseColor.main,
+            color: 'white',
+            borderRadius: '10px',
+            flexGrow: 1,
+          }}
+        >
           <CardContent sx={{ padding: { xs: 1, sm: 2 } }}>
             <Stack direction={'row'}>
               <ArrowDownwardIcon sx={{ fontSize: '2rem' }} />
@@ -46,7 +55,14 @@ const MonthlySummary = () => {
       </Grid>
       {/* 残高 */}
       <Grid item xs={4} display={'flex'} flexDirection={'column'}>
-        <Card sx={{ bgcolor: 'green', color: 'white', borderRadius: '10px', flexGrow: 1 }}>
+        <Card
+          sx={{
+            bgcolor: (theme) => theme.palette.balanceColor.main,
+            color: 'white',
+            borderRadius: '10px',
+            flexGrow: 1,
+          }}
+        >
           <CardContent sx={{ padding: { xs: 1, sm: 2 } }}>
             <Stack direction={'row'}>
               <AccountBalanceIcon sx={{ fontSize: '2rem' }} />

@@ -19,7 +19,7 @@ interface SidebarProps {
   mobileOpen: boolean;
   handleDrawerClose: () => void;
   handleDrawerTransitionEnd: () => void;
-} //typeの方が定義できる方の種類が多い
+} //typeの方が定義できる方の種類が多い、interfaceはデータの型定義（Typescriptならではの）
 
 interface menuItem {
   text: string;
@@ -53,7 +53,7 @@ const Sidebar = ({ drawerWidth, mobileOpen, handleDrawerClose, handleDrawerTrans
             key={item.text} //ユニークなキー、indexでもOK!
             to={item.path}
             style={({ isActive }) => {
-              console.log('選択されたメニューは', item.text, isActive);
+              // console.log('選択されたメニューは', item.text, isActive);
               return {
                 ...baseLinkStyle, //これだけで展開できる
                 ...(isActive ? activeLinkStyle : {}),

@@ -8,14 +8,26 @@ import { theme } from './theme/theme';
 import { ThemeProvider } from '@emotion/react';
 import { CssBaseline } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { collection, getDocs, Transaction } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
+import { format } from 'date-fns';
+import { Transaction } from './types/index'; //ここ気をつけて、importしないとtransactionの中身は空だよ
+import { formatMonth } from './utils/formatting';
 
 function App() {
+  //firestoreエラーかどうかを判定する型ガード
+  function isFireStoreError(err: unknown): err is { code: string; message: string } {
+    return typeof err === 'object' && err !== null && 'code' in err;
+  }
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [currentMonth, serCurrentMonth] = useState(new Date());
+  console.log(currentMonth);
+  const a = format(currentMonth, 'yyyy-MM');
+  console.log(a);
 
   useEffect(() => {
-    const fecheTransactions = async () => {
+    const fetchTransactions = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'Transactions'));
 
@@ -30,12 +42,24 @@ function App() {
 
         console.log(transactionsDate);
         setTransactions(transactionsDate);
-      } catch (error) {
-        //error
+      } catch (err) {
+        if (isFireStoreError(err)) {
+          console.log('firebaseのエラーは:', err);
+          console.log('firebaseのエラーメッセージは:', err.message);
+          console.log('firebaseのエラーコードは:', err.code);
+        } else {
+          console.error('一般的なエラーは:', err);
+        }
       }
     };
-    fecheTransactions();
+
+    fetchTransactions();
   }, []);
+
+  const monthlyTransactions = transactions.filter((transaction) => {
+    return transaction.date.startsWith(formatMonth(currentMonth));
+  });
+  console.log(monthlyTransactions);
 
   return (
     <ThemeProvider theme={theme}>
@@ -43,7 +67,7 @@ function App() {
       <Router>
         <Routes>
           <Route path='/' element={<AppLayout />}>
-            <Route index element={<Home />} />
+            <Route index element={<Home monthlyTransactions={monthlyTransactions} />} />
             <Route path='/report' element={<Report />} />
             <Route path='*' element={<NoMatch />} />
           </Route>

@@ -2,8 +2,18 @@ import { Card, CardContent, Grid, Stack, Typography } from '@mui/material';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import { Transaction } from '../../../../types';
+import { financeCalculations } from '../../../../utils/financeCalculations';
 
-const MonthlySummary = () => {
+interface MonthlySummaryProps {
+  monthlyTransactions: Transaction[];
+}
+
+const MonthlySummary = ({ monthlyTransactions }: MonthlySummaryProps) => {
+  console.log(monthlyTransactions);
+
+  const { income, expense, balance } = financeCalculations(monthlyTransactions);
+
   return (
     <Grid container spacing={{ xs: 1, sm: 2 }} mb={2}>
       {/* 収入 */}
@@ -22,7 +32,7 @@ const MonthlySummary = () => {
               fontWeight={'fontWeightBold'}
               sx={{ wordBreak: 'break-word', fontSize: { xs: '.8rem', sm: '1rem', md: '1.2rem' } }}
             >
-              ￥300
+              ￥{income}
             </Typography>
           </CardContent>
         </Card>
@@ -48,7 +58,7 @@ const MonthlySummary = () => {
               fontWeight={'fontWeightBold'}
               sx={{ wordBreak: 'break-word', fontSize: { xs: '.8rem', sm: '1rem', md: '1.2rem' } }}
             >
-              ￥300
+              ￥{expense}
             </Typography>
           </CardContent>
         </Card>
@@ -74,7 +84,7 @@ const MonthlySummary = () => {
               fontWeight={'fontWeightBold'}
               sx={{ wordBreak: 'break-word', fontSize: { xs: '.8rem', sm: '1rem', md: '1.2rem' } }}
             >
-              ￥300
+              ￥{balance}
             </Typography>
           </CardContent>
         </Card>

@@ -21,7 +21,7 @@ function App() {
   }
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [currentMonth, serCurrentMonth] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   console.log(currentMonth);
   const a = format(currentMonth, 'yyyy-MM');
   console.log(a);
@@ -57,7 +57,7 @@ function App() {
   }, []);
 
   const monthlyTransactions = transactions.filter((transaction) => {
-    return transaction.date.startsWith(formatMonth(currentMonth));
+    return transaction.date.startsWith(formatMonth(currentMonth)); //new dateが入っているので今月分のデータだけが表示される
   });
   console.log(monthlyTransactions);
 
@@ -67,7 +67,10 @@ function App() {
       <Router>
         <Routes>
           <Route path='/' element={<AppLayout />}>
-            <Route index element={<Home monthlyTransactions={monthlyTransactions} />} />
+            <Route
+              index
+              element={<Home monthlyTransactions={monthlyTransactions} setCurrentMonth={setCurrentMonth} />}
+            />
             <Route path='/report' element={<Report />} />
             <Route path='*' element={<NoMatch />} />
           </Route>

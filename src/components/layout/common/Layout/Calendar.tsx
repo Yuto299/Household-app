@@ -6,13 +6,21 @@ import { DatesSetArg, EventContentArg } from '@fullcalendar/core';
 import { calculateDailyBalances } from '../../../../utils/financeCalculations';
 import { Balance, CalenderContent, Transaction } from '../../../../types';
 import { formatCurrency } from '../../../../utils/formatting';
+import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction';
+import { useTheme } from '@mui/material';
+import { isSameMonth } from 'date-fns';
 
 interface monthlyTransactions {
   monthlyTransactions: Transaction[];
   setCurrentMonth: React.Dispatch<React.SetStateAction<Date>>;
+  setCurrentDay: React.Dispatch<React.SetStateAction<string>>;
+  currentDay: string;
+  today: string;
 }
 
-const Calender = ({ monthlyTransactions, setCurrentMonth }: monthlyTransactions) => {
+const Calender = ({ monthlyTransactions, setCurrentMonth, setCurrentDay, currentDay, today }: monthlyTransactions) => {
+  const theme = useTheme();
+
   const dailyBalance = calculateDailyBalances(monthlyTransactions);
   console.log(dailyBalance);
 
@@ -30,6 +38,12 @@ const Calender = ({ monthlyTransactions, setCurrentMonth }: monthlyTransactions)
 
   const calenderEvents = createCalenderEvents(dailyBalance);
   console.log(calenderEvents);
+
+  const backgroundEvent = {
+    start: currentDay,
+    display: 'background',
+    backgroundColor: theme.palette.incomeColor.light,
+  };
 
   const renderEventContent = (eventInfo: EventContentArg) => {
     return (
@@ -50,18 +64,28 @@ const Calender = ({ monthlyTransactions, setCurrentMonth }: monthlyTransactions)
   };
 
   const handleDateSet = (datesetInfo: DatesSetArg) => {
-    console.log(datesetInfo);
-    setCurrentMonth(datesetInfo.view.currentStart);
+    const CurrentMonth = datesetInfo.view.currentStart;
+    setCurrentMonth(CurrentMonth);
+    const todayDate = new Date();
+    if (isSameMonth(todayDate, CurrentMonth)) {
+      setCurrentDay(today);
+    }
+  };
+
+  const handleDateClick = (dateInfo: DateClickArg) => {
+    // console.log(dateInfo);
+    setCurrentDay(dateInfo.dateStr);
   };
 
   return (
     <FullCalendar
       locale={jaLocale}
-      plugins={[dayGridPlugin]}
+      plugins={[dayGridPlugin, interactionPlugin]}
       initialView='dayGridMonth'
-      events={calenderEvents}
+      events={[...calenderEvents, backgroundEvent]}
       eventContent={renderEventContent}
       datesSet={handleDateSet}
+      dateClick={handleDateClick}
     />
   );
 };

@@ -12,7 +12,10 @@ import {
 import CloseIcon from '@mui/icons-material/Close'; // 閉じるボタン用のアイコン
 import Fastfood from '@mui/icons-material/Fastfood'; //食事アイコン
 import { Controller, useForm } from 'react-hook-form';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+import { ExpenseCategory, IncomeCategory } from '../../../../types';
+import { AddBusiness, AddHome, Alarm, Diversity3, Savings, SportsTennis, Train, Work } from '@mui/icons-material';
 
 interface TransactionFormProps {
   onCloseForm: () => void;
@@ -22,8 +25,29 @@ interface TransactionFormProps {
 
 type IncomeExpense = 'income' | 'expense';
 
+interface CategoryItem {
+  label: IncomeCategory | ExpenseCategory;
+  icon: JSX.Element;
+}
+
 const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: TransactionFormProps) => {
   const formWidth = 320;
+
+  const expenseCategories: CategoryItem[] = [
+    { label: '食費', icon: <Fastfood fontSize='small' /> },
+    { label: '日用品', icon: <Alarm fontSize='small' /> },
+    { label: '家賃', icon: <AddHome fontSize='small' /> },
+    { label: '交際費', icon: <Diversity3 fontSize='small' /> },
+    { label: '娯楽', icon: <SportsTennis fontSize='small' /> },
+    { label: '交通費', icon: <Train fontSize='small' /> },
+  ];
+
+  const incomeCategories: CategoryItem[] = [
+    { label: '給与', icon: <Work fontSize='small' /> },
+    { label: '副収入', icon: <Savings fontSize='small' /> },
+    { label: 'お小遣い', icon: <AddBusiness fontSize='small' /> },
+  ];
+  const [categories, setCategories] = useState(expenseCategories);
 
   const { control, setValue, watch } = useForm({
     defaultValues: {
@@ -42,6 +66,13 @@ const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: Transac
   //収支タイプを監視
   const currentType = watch('type');
   // console.log(currentType);
+
+  useEffect(() => {
+    const newCategories = currentType === 'expense' ? expenseCategories : incomeCategories;
+    // console.log(newCategories);
+    setCategories(newCategories);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentType]);
 
   useEffect(() => {
     setValue('date', currentDay);
@@ -129,12 +160,12 @@ const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: Transac
             control={control}
             render={({ field }) => (
               <TextField {...field} id='カテゴリ' label='カテゴリ' select>
-                <MenuItem value={'食費'}>
-                  <ListItemIcon>
-                    <Fastfood />
-                  </ListItemIcon>
-                  食費
-                </MenuItem>
+                {categories.map((category) => (
+                  <MenuItem value={category.label}>
+                    <ListItemIcon key={category.label}>{category.icon}</ListItemIcon>
+                    {category.label}
+                  </MenuItem>
+                ))}
               </TextField>
             )}
           />
@@ -142,7 +173,18 @@ const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: Transac
           <Controller
             name='amount'
             control={control}
-            render={({ field }) => <TextField {...field} label='金額' type='number' />}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                value={field.value === 0 ? '' : field.value}
+                onChange={(e) => {
+                  const newValue = parseInt(e.target.value, 10) || 0; //10進数に変換
+                  field.onChange(newValue);
+                }}
+                label='金額'
+                type='number'
+              />
+            )}
           />
           {/* 内容 */}
           <Controller

@@ -13,9 +13,11 @@ import CloseIcon from '@mui/icons-material/Close'; // 閉じるボタン用の�
 import Fastfood from '@mui/icons-material/Fastfood'; //食事アイコン
 import { Controller, useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 import { ExpenseCategory, IncomeCategory } from '../../../../types';
 import { AddBusiness, AddHome, Alarm, Diversity3, Savings, SportsTennis, Train, Work } from '@mui/icons-material';
+import { transactionSchema } from '../../../../validations/schema';
 
 interface TransactionFormProps {
   onCloseForm: () => void;
@@ -49,7 +51,13 @@ const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: Transac
   ];
   const [categories, setCategories] = useState(expenseCategories);
 
-  const { control, setValue, watch } = useForm({
+  const {
+    control,
+    setValue,
+    watch,
+    formState: { errors },
+    handleSubmit,
+  } = useForm({
     defaultValues: {
       type: 'expense',
       date: currentDay,
@@ -57,7 +65,9 @@ const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: Transac
       category: '',
       content: '',
     },
+    resolver: zodResolver(transactionSchema),
   });
+  console.log(errors);
 
   const incomeExpenseToggle = (type: IncomeExpense) => {
     setValue('type', type);
@@ -73,6 +83,10 @@ const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: Transac
     setCategories(newCategories);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentType]);
+
+  const onSubmit = (date: any) => {
+    console.log(date);
+  };
 
   useEffect(() => {
     setValue('date', currentDay);
@@ -113,7 +127,7 @@ const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: Transac
       </Box>
 
       {/* フォーム要素 */}
-      <Box component={'form'}>
+      <Box component={'form'} onSubmit={handleSubmit(onSubmit)}>
         <Stack spacing={2}>
           {/* 収支切り替えボタン */}
           <Controller
@@ -151,6 +165,8 @@ const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: Transac
                 InputLabelProps={{
                   shrink: true,
                 }}
+                error={!!errors.date} //trueにするとフォームが赤くなる
+                helperText={errors.date?.message} //dateがある時だけmessageにアクセスする
               />
             )}
           />
@@ -159,10 +175,17 @@ const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: Transac
             name='category'
             control={control}
             render={({ field }) => (
-              <TextField {...field} id='カテゴリ' label='カテゴリ' select>
-                {categories.map((category) => (
-                  <MenuItem value={category.label}>
-                    <ListItemIcon key={category.label}>{category.icon}</ListItemIcon>
+              <TextField
+                error={!!errors.category} //trueにするとフォームが赤くなる
+                helperText={errors.category?.message} //dateがある時だけmessageにアクセスする
+                {...field}
+                id='カテゴリ'
+                label='カテゴリ'
+                select
+              >
+                {categories.map((category, index) => (
+                  <MenuItem value={category.label} key={index}>
+                    <ListItemIcon>{category.icon}</ListItemIcon>
                     {category.label}
                   </MenuItem>
                 ))}
@@ -175,6 +198,8 @@ const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: Transac
             control={control}
             render={({ field }) => (
               <TextField
+                error={!!errors.amount} //trueにするとフォームが赤くなる
+                helperText={errors.amount?.message} //dateがある時だけmessageにアクセスする
                 {...field}
                 value={field.value === 0 ? '' : field.value}
                 onChange={(e) => {
@@ -190,7 +215,15 @@ const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: Transac
           <Controller
             name='content'
             control={control}
-            render={({ field }) => <TextField {...field} label='内容' type='text' />}
+            render={({ field }) => (
+              <TextField
+                error={!!errors.content} //trueにするとフォームが赤くなる
+                helperText={errors.content?.message} //dateがある時だけmessageにアクセスする
+                {...field}
+                label='内容'
+                type='text'
+              />
+            )}
           />
           {/* 保存ボタン */}
           <Button type='submit' variant='contained' color={currentType === 'income' ? 'primary' : 'error'} fullWidth>

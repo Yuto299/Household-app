@@ -11,18 +11,21 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close'; // 閉じるボタン用のアイコン
 import Fastfood from '@mui/icons-material/Fastfood'; //食事アイコン
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { ExpenseCategory, IncomeCategory } from '../../../../types';
+import { ExpenseCategory, IncomeCategory, Transaction } from '../../../../types';
 import { AddBusiness, AddHome, Alarm, Diversity3, Savings, SportsTennis, Train, Work } from '@mui/icons-material';
-import { transactionSchema } from '../../../../validations/schema';
+import { Schema, transactionSchema } from '../../../../validations/schema';
 
 interface TransactionFormProps {
   onCloseForm: () => void;
   isEntryDrawerOpen: boolean;
   currentDay: string;
+  onSaveTransaction: (transaction: Schema) => Promise<void>;
+  selectedTransaction: Transaction | null;
+  onDeleteTransaction: (transactionId: string) => Promise<void>;
 }
 
 type IncomeExpense = 'income' | 'expense';
@@ -32,7 +35,14 @@ interface CategoryItem {
   icon: JSX.Element;
 }
 
-const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: TransactionFormProps) => {
+const TransactionForm = ({
+  onCloseForm,
+  isEntryDrawerOpen,
+  currentDay,
+  onSaveTransaction,
+  selectedTransaction,
+  onDeleteTransaction,
+}: TransactionFormProps) => {
   const formWidth = 320;
 
   const expenseCategories: CategoryItem[] = [
@@ -57,20 +67,23 @@ const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: Transac
     watch,
     formState: { errors },
     handleSubmit,
-  } = useForm({
+    reset,
+  } = useForm<Schema>({
     defaultValues: {
       type: 'expense',
       date: currentDay,
       amount: 0,
-      category: '',
+      category: '食費', //refineでから文字が無効になっているので変更
       content: '',
     },
     resolver: zodResolver(transactionSchema),
   });
   console.log(errors);
 
+  //収支タイプを切り替える関数
   const incomeExpenseToggle = (type: IncomeExpense) => {
     setValue('type', type);
+    setValue('category', '食費');
   };
 
   //収支タイプを監視
@@ -84,13 +97,46 @@ const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: Transac
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentType]);
 
-  const onSubmit = (date: any) => {
+  //送信処理
+  const onSubmit: SubmitHandler<Schema> = (date) => {
     console.log(date);
+    onSaveTransaction(date);
+
+    reset({
+      type: 'expense',
+      date: currentDay,
+      amount: 0,
+      category: '食費', //refineでから文字が無効になっているので変更
+      content: '',
+    });
   };
+
+  useEffect(() => {
+    if (selectedTransaction) {
+      setValue('type', selectedTransaction.type);
+      setValue('date', selectedTransaction.date);
+      setValue('amount', selectedTransaction.amount);
+      setValue('content', selectedTransaction.content);
+    } else {
+      reset({
+        date: currentDay,
+        type: 'expense',
+        amount: 0,
+        content: '',
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTransaction]);
 
   useEffect(() => {
     setValue('date', currentDay);
   }, [currentDay, setValue]);
+
+  const handleDelete = () => {
+    if (selectedTransaction) {
+      onDeleteTransaction(selectedTransaction.id);
+    }
+  };
 
   return (
     <Box
@@ -113,8 +159,8 @@ const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: Transac
       }}
     >
       {/* 入力エリアヘッダー */}
-      <Box display={'flex'} justifyContent={'space-between'} mb={2}>
-        <Typography variant='h6'>入力</Typography>
+      <Box display='flex' justifyContent='space-between' alignItems='center' mb={2}>
+        <Typography variant='h5'>入力</Typography>
         {/* 閉じるボタン */}
         <IconButton
           onClick={onCloseForm}
@@ -229,6 +275,12 @@ const TransactionForm = ({ onCloseForm, isEntryDrawerOpen, currentDay }: Transac
           <Button type='submit' variant='contained' color={currentType === 'income' ? 'primary' : 'error'} fullWidth>
             保存
           </Button>
+
+          {selectedTransaction && (
+            <Button onClick={handleDelete} variant='outlined' color={'secondary'} fullWidth>
+              削除
+            </Button>
+          )}
         </Stack>
       </Box>
     </Box>

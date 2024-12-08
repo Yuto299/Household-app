@@ -8,11 +8,11 @@ import { theme } from './theme/theme';
 import { ThemeProvider } from '@emotion/react';
 import { CssBaseline } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
-import { format } from 'date-fns';
 import { Transaction } from './types/index'; //ここ気をつけて、importしないとtransactionの中身は空だよ
 import { formatMonth } from './utils/formatting';
+import { Schema } from './validations/schema';
 
 function App() {
   //firestoreエラーかどうかを判定する型ガード
@@ -22,10 +22,12 @@ function App() {
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  console.log(currentMonth);
-  const a = format(currentMonth, 'yyyy-MM');
-  console.log(a);
 
+  // console.log(currentMonth);
+  // const a = format(currentMonth, 'yyyy-MM');
+  // console.log(a);
+
+  // firestoreのデータを全て取得
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
@@ -56,10 +58,52 @@ function App() {
     fetchTransactions();
   }, []);
 
+  //ひと月分のデータ
   const monthlyTransactions = transactions.filter((transaction) => {
     return transaction.date.startsWith(formatMonth(currentMonth)); //new dateが入っているので今月分のデータだけが表示される
   });
-  console.log(monthlyTransactions);
+
+  //取引を保存する処理
+  const handleSaveTransaction = async (transaction: Schema) => {
+    console.log(transaction);
+    try {
+      //firestoreにデータを保存
+      // Add a new document with a generated id.
+      const docRef = await addDoc(collection(db, 'Transactions'), transaction);
+      console.log('Document written with ID: ', docRef.id);
+
+      const newTransaction = {
+        id: docRef.id,
+        ...transaction,
+      } as Transaction;
+
+      console.log(newTransaction);
+      setTransactions((prevTransaction) => [...prevTransaction, newTransaction]);
+    } catch (err) {
+      if (isFireStoreError(err)) {
+        console.log('firebaseのエラーは:', err);
+        console.log('firebaseのエラーメッセージは:', err.message);
+        console.log('firebaseのエラーコードは:', err.code);
+      } else {
+        console.error('一般的なエラーは:', err);
+      }
+    }
+  };
+
+  const handleDeleteTransaction = async (transactionId: string) => {
+    //firestoreのデータを削除
+    try {
+      await deleteDoc(doc(db, 'Transactions', transactionId));
+    } catch (err) {
+      if (isFireStoreError(err)) {
+        console.log('firebaseのエラーは:', err);
+        console.log('firebaseのエラーメッセージは:', err.message);
+        console.log('firebaseのエラーコードは:', err.code);
+      } else {
+        console.error('一般的なエラーは:', err);
+      }
+    }
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -69,7 +113,14 @@ function App() {
           <Route path='/' element={<AppLayout />}>
             <Route
               index
-              element={<Home monthlyTransactions={monthlyTransactions} setCurrentMonth={setCurrentMonth} />}
+              element={
+                <Home
+                  monthlyTransactions={monthlyTransactions}
+                  setCurrentMonth={setCurrentMonth}
+                  onSaveTransaction={handleSaveTransaction}
+                  onDeleteTransaction={handleDeleteTransaction}
+                />
+              }
             />
             <Route path='/report' element={<Report />} />
             <Route path='*' element={<NoMatch />} />

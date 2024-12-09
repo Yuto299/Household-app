@@ -1,4 +1,3 @@
-import './App.css';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import Home from './pages/Home';
 import Report from './pages/Report';
@@ -8,7 +7,7 @@ import { theme } from './theme/theme';
 import { ThemeProvider } from '@emotion/react';
 import { CssBaseline } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { addDoc, collection, deleteDoc, doc, getDocs } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { Transaction } from './types/index'; //ここ気をつけて、importしないとtransactionの中身は空だよ
 import { formatMonth } from './utils/formatting';
@@ -94,6 +93,30 @@ function App() {
     //firestoreのデータを削除
     try {
       await deleteDoc(doc(db, 'Transactions', transactionId));
+      const filterdTransactions = transactions.filter((transaction) => transaction.id !== transactionId);
+      setTransactions(filterdTransactions);
+    } catch (err) {
+      if (isFireStoreError(err)) {
+        console.log('firebaseのエラーは:', err);
+        console.log('firebaseのエラーメッセージは:', err.message);
+        console.log('firebaseのエラーコードは:', err.code);
+      } else {
+        console.error('一般的なエラーは:', err);
+      }
+    }
+  };
+
+  const handleUpdateTransaction = async (transaction: Schema, transactionId: string) => {
+    try {
+      //更新処理
+      const docRef = doc(db, 'Transactions', transactionId);
+      // Set the "capital" field of the city 'DC'
+      await updateDoc(docRef, transaction);
+      // フロント更新
+      const updatedTransactions = transactions.map((t) =>
+        t.id === transactionId ? { ...t, ...transaction } : t
+      ) as Transaction[]; //tは元々のデータ、transactionはフォームに入力されたデータ
+      setTransactions(updatedTransactions);
     } catch (err) {
       if (isFireStoreError(err)) {
         console.log('firebaseのエラーは:', err);
@@ -119,6 +142,7 @@ function App() {
                   setCurrentMonth={setCurrentMonth}
                   onSaveTransaction={handleSaveTransaction}
                   onDeleteTransaction={handleDeleteTransaction}
+                  onUpdateTransaction={handleUpdateTransaction}
                 />
               }
             />

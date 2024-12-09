@@ -26,6 +26,8 @@ interface TransactionFormProps {
   onSaveTransaction: (transaction: Schema) => Promise<void>;
   selectedTransaction: Transaction | null;
   onDeleteTransaction: (transactionId: string) => Promise<void>;
+  setSelectedTransaction: React.Dispatch<React.SetStateAction<Transaction | null>>;
+  onUpdateTransaction: (transaction: Schema, transactionId: string) => Promise<void>;
 }
 
 type IncomeExpense = 'income' | 'expense';
@@ -42,6 +44,8 @@ const TransactionForm = ({
   onSaveTransaction,
   selectedTransaction,
   onDeleteTransaction,
+  setSelectedTransaction,
+  onUpdateTransaction,
 }: TransactionFormProps) => {
   const formWidth = 320;
 
@@ -73,7 +77,7 @@ const TransactionForm = ({
       type: 'expense',
       date: currentDay,
       amount: 0,
-      category: '食費', //refineでから文字が無効になっているので変更
+      category: '' as Schema['category'], //refineでから文字が無効になっているので変更
       content: '',
     },
     resolver: zodResolver(transactionSchema),
@@ -99,17 +103,43 @@ const TransactionForm = ({
 
   //送信処理
   const onSubmit: SubmitHandler<Schema> = (date) => {
-    console.log(date);
-    onSaveTransaction(date);
+    // console.log(date);
+    if (selectedTransaction) {
+      onUpdateTransaction(date, selectedTransaction.id)
+        .then(() => {
+          // alert('更新しました');
+          setSelectedTransaction(null);
+        })
+        .catch((error) => {
+          alert(error);
+        });
+    } else {
+      onSaveTransaction(date)
+        .then(() => {
+          alert('保存しました');
+          setSelectedTransaction(null);
+        })
+        .catch((error) => {
+          alert(error);
+        });
+    }
 
     reset({
       type: 'expense',
       date: currentDay,
       amount: 0,
-      category: '食費', //refineでから文字が無効になっているので変更
+      category: '' as Schema['category'], //refineでから文字が無効になっているので変更
       content: '',
     });
   };
+
+  useEffect(() => {
+    //選択肢が更新されたか確認する処理
+    if (selectedTransaction) {
+      const categoryExists = categories.some((category) => category.label === selectedTransaction.category);
+      setValue('category', categoryExists ? selectedTransaction.category : ('' as Schema['category']));
+    }
+  }, [selectedTransaction, categories, setValue]);
 
   useEffect(() => {
     if (selectedTransaction) {
@@ -122,6 +152,7 @@ const TransactionForm = ({
         date: currentDay,
         type: 'expense',
         amount: 0,
+        category: '' as Schema['category'],
         content: '',
       });
     }
@@ -135,6 +166,7 @@ const TransactionForm = ({
   const handleDelete = () => {
     if (selectedTransaction) {
       onDeleteTransaction(selectedTransaction.id);
+      setSelectedTransaction(null);
     }
   };
 
@@ -273,7 +305,7 @@ const TransactionForm = ({
           />
           {/* 保存ボタン */}
           <Button type='submit' variant='contained' color={currentType === 'income' ? 'primary' : 'error'} fullWidth>
-            保存
+            {selectedTransaction ? '更新' : '保存'}
           </Button>
 
           {selectedTransaction && (

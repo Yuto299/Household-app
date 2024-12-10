@@ -14,24 +14,22 @@ import { formatMonth } from './utils/formatting';
 import { Schema } from './validations/schema';
 
 function App() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  // console.log(currentMonth);
+  // const a = format(currentMonth, 'yyyy-MM');
+  // console.log(a);
+
   //firestoreエラーかどうかを判定する型ガード
   function isFireStoreError(err: unknown): err is { code: string; message: string } {
     return typeof err === 'object' && err !== null && 'code' in err;
   }
-
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-
-  // console.log(currentMonth);
-  // const a = format(currentMonth, 'yyyy-MM');
-  // console.log(a);
 
   // firestoreのデータを全て取得
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'Transactions'));
-
         const transactionsDate = querySnapshot.docs.map((doc) => {
           // // doc.data() is never undefined for query doc snapshots
           // console.log(doc.id, " => ", doc.data());
@@ -40,7 +38,6 @@ function App() {
             id: doc.id,
           } as unknown as Transaction;
         });
-
         console.log(transactionsDate);
         setTransactions(transactionsDate);
       } catch (err) {
@@ -53,7 +50,6 @@ function App() {
         }
       }
     };
-
     fetchTransactions();
   }, []);
 
@@ -146,7 +142,7 @@ function App() {
                 />
               }
             />
-            <Route path='/report' element={<Report />} />
+            <Route path='/report' element={<Report currentMonth={currentMonth} setCurrentMonth={setCurrentMonth} />} />
             <Route path='*' element={<NoMatch />} />
           </Route>
         </Routes>

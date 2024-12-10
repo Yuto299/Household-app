@@ -14,7 +14,6 @@ import Fastfood from '@mui/icons-material/Fastfood'; //食事アイコン
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-
 import { ExpenseCategory, IncomeCategory, Transaction } from '../../../../types';
 import { AddBusiness, AddHome, Alarm, Diversity3, Savings, SportsTennis, Train, Work } from '@mui/icons-material';
 import { Schema, transactionSchema } from '../../../../validations/schema';
@@ -31,7 +30,6 @@ interface TransactionFormProps {
 }
 
 type IncomeExpense = 'income' | 'expense';
-
 interface CategoryItem {
   label: IncomeCategory | ExpenseCategory;
   icon: JSX.Element;

@@ -1,10 +1,20 @@
 import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ChartData } from 'chart.js';
+import { Transaction } from '../../types';
+import { calculateDailyBalances } from '../../utils/financeCalculations';
+import { Box, Typography, useTheme } from '@mui/material';
+import CircularProgress from '@mui/material/CircularProgress';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-const BarChart = () => {
+interface BarChartProps {
+  monthlyTransactions: Transaction[];
+  isLoading: boolean;
+}
+const BarChart = ({ monthlyTransactions, isLoading }: BarChartProps) => {
+  const theme = useTheme();
   const options = {
+    maintainAspectRatio: false,
     responsive: true,
     plugins: {
       legend: {
@@ -12,29 +22,52 @@ const BarChart = () => {
       },
       title: {
         display: true,
-        text: 'Chart.js Bar Chart',
+        text: '日別収支',
       },
     },
   };
 
-  const labels = ['2024-12-25', '2024-12-25', '2024-12-25', '2024-12-25', '2024-12-25', '2024-12-25', '2024-12-25'];
-  const data = {
-    labels,
+  const dailyBalances = calculateDailyBalances(monthlyTransactions);
+
+  const dateLabels = Object.keys(dailyBalances).sort();
+  console.log(dateLabels);
+  const expenseDate = dateLabels.map((day) => dailyBalances[day].expense);
+  const incomeDate = dateLabels.map((day) => dailyBalances[day].income);
+
+  const data: ChartData<'bar'> = {
+    labels: dateLabels,
     datasets: [
       {
         label: '支出',
-        data: [100, 200, 300, 300, 400, 400, 500],
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+        data: expenseDate,
+        backgroundColor: theme.palette.expenseColor.light,
       },
       {
         label: '収入',
-        data: [100, 200, 300, 300, 400, 400, 500],
-        backgroundColor: 'rgba(53, 162, 235, 0.5)',
+        data: incomeDate,
+        backgroundColor: theme.palette.incomeColor.light,
       },
     ],
   };
 
-  return <Bar options={options} data={data} />;
+  return (
+    <Box
+      sx={{
+        flexGrow: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {isLoading ? (
+        <CircularProgress />
+      ) : monthlyTransactions.length > 0 ? (
+        <Bar options={options} data={data} />
+      ) : (
+        <Typography>データがありません</Typography>
+      )}
+    </Box>
+  );
 };
 
 export default BarChart;

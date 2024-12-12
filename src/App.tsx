@@ -16,6 +16,7 @@ import { Schema } from './validations/schema';
 function App() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [isLoading, setIsLoading] = useState(true);
   // console.log(currentMonth);
   // const a = format(currentMonth, 'yyyy-MM');
   // console.log(a);
@@ -30,7 +31,7 @@ function App() {
     const fetchTransactions = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'Transactions'));
-        const transactionsDate = querySnapshot.docs.map((doc) => {
+        const transactionsData = querySnapshot.docs.map((doc) => {
           // // doc.data() is never undefined for query doc snapshots
           // console.log(doc.id, " => ", doc.data());
           return {
@@ -38,8 +39,7 @@ function App() {
             id: doc.id,
           } as unknown as Transaction;
         });
-        console.log(transactionsDate);
-        setTransactions(transactionsDate);
+        setTransactions(transactionsData);
       } catch (err) {
         if (isFireStoreError(err)) {
           console.log('firebaseのエラーは:', err);
@@ -48,6 +48,8 @@ function App() {
         } else {
           console.error('一般的なエラーは:', err);
         }
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchTransactions();
@@ -142,7 +144,17 @@ function App() {
                 />
               }
             />
-            <Route path='/report' element={<Report currentMonth={currentMonth} setCurrentMonth={setCurrentMonth} />} />
+            <Route
+              path='/report'
+              element={
+                <Report
+                  currentMonth={currentMonth}
+                  setCurrentMonth={setCurrentMonth}
+                  monthlyTransactions={monthlyTransactions}
+                  isLoading={isLoading}
+                />
+              }
+            />
             <Route path='*' element={<NoMatch />} />
           </Route>
         </Routes>

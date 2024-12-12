@@ -3,18 +3,23 @@ import CategoryChart from '../components/layout/CategoryChart';
 import TransactionTable from '../components/layout/TransactionTable';
 import BarChart from '../components/layout/BarChart';
 import MouthSelecter from '../components/layout/MouthSelecter';
+import { Transaction } from '../types';
 
 interface ReportProps {
   currentMonth: Date;
   setCurrentMonth: React.Dispatch<React.SetStateAction<Date>>;
+  monthlyTransactions: Transaction[];
+  isLoading: boolean;
 }
 
-const Report = ({ currentMonth, setCurrentMonth }: ReportProps) => {
+const Report = ({ currentMonth, setCurrentMonth, monthlyTransactions, isLoading }: ReportProps) => {
   const commonPaperStyle = () => ({
-    height: { xs: 'auto', md: '400px' },
+    height: '400px',
     display: 'flex',
     flexDirection: 'column',
+    p: 2,
   });
+
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
@@ -24,11 +29,10 @@ const Report = ({ currentMonth, setCurrentMonth }: ReportProps) => {
         <Paper sx={commonPaperStyle}>
           <CategoryChart />
         </Paper>
-        カテゴリグラフ
       </Grid>
       <Grid item xs={12} md={8}>
         <Paper sx={commonPaperStyle}>
-          <BarChart />
+          <BarChart monthlyTransactions={monthlyTransactions} isLoading={isLoading} />
         </Paper>
       </Grid>
       <Grid item xs={12}>

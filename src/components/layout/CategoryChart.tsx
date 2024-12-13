@@ -1,16 +1,31 @@
 import React, { useState } from 'react';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-import { Box, MenuItem, TextField } from '@mui/material';
-import { TransactionType } from '../../types';
+import { Box, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
+import { ExpenseCategory, IncomeCategory, Transaction, TransactionType } from '../../types';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const CategoryChart = () => {
+interface CategoryChartProps {
+  monthlyTransactions: Transaction[];
+}
+
+const CategoryChart = ({ monthlyTransactions }: CategoryChartProps) => {
   const [selectedType, setSelectedType] = useState<TransactionType>('expense');
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: SelectChangeEvent<string>) => {
     setSelectedType(e.target.value as TransactionType);
   };
+
+  const categorySums = monthlyTransactions
+    .filter((transaction) => transaction.type === selectedType)
+    .reduce<Record<IncomeCategory | ExpenseCategory, number>>((acc, transaction) => {
+      if (!acc[transaction.category]) {
+        acc[transaction.category] = 0;
+      }
+      acc[transaction.category] += transaction.amount;
+      return acc;
+    }, {} as Record<IncomeCategory | ExpenseCategory, number>);
+  console.log(categorySums);
 
   const data = {
     labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
@@ -41,10 +56,24 @@ const CategoryChart = () => {
 
   return (
     <Box>
-      <TextField label='収支の種類' select fullWidth value={selectedType} onChange={handleChange}>
+      {/* <TextField id={'select-type'} label='収支の種類' select fullWidth value={selectedType} onChange={handleChange}>
         <MenuItem value={'income'}>収入</MenuItem>
         <MenuItem value={'expense'}>支出</MenuItem>
-      </TextField>
+      </TextField> */}
+      <FormControl fullWidth>
+        <InputLabel id='type-select-label'>収支の種類</InputLabel>
+        <Select
+          labelId='type-select-label'
+          id='type-select'
+          label='収支の種類'
+          value={selectedType}
+          onChange={handleChange}
+        >
+          <MenuItem value='income'>収入</MenuItem>
+          <MenuItem value='expense'>支出</MenuItem>
+        </Select>
+      </FormControl>
+
       <Pie data={data} />
     </Box>
   );

@@ -22,7 +22,7 @@ const Calender = ({ monthlyTransactions, setCurrentMonth, setCurrentDay, current
   const theme = useTheme();
 
   const dailyBalance = calculateDailyBalances(monthlyTransactions);
-  console.log(dailyBalance);
+  // console.log(dailyBalance);
 
   const createCalenderEvents = (dailyBalance: Record<string, Balance>): CalenderContent[] => {
     return Object.keys(dailyBalance).map((date) => {

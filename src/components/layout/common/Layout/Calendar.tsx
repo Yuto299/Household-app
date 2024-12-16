@@ -16,9 +16,17 @@ interface monthlyTransactions {
   setCurrentDay: React.Dispatch<React.SetStateAction<string>>;
   currentDay: string;
   today: string;
+  onDateClick: (dateInfo: DateClickArg) => void;
 }
 
-const Calender = ({ monthlyTransactions, setCurrentMonth, setCurrentDay, currentDay, today }: monthlyTransactions) => {
+const Calender = ({
+  monthlyTransactions,
+  setCurrentMonth,
+  setCurrentDay,
+  currentDay,
+  today,
+  onDateClick,
+}: monthlyTransactions) => {
   const theme = useTheme();
 
   const dailyBalance = calculateDailyBalances(monthlyTransactions);
@@ -72,11 +80,6 @@ const Calender = ({ monthlyTransactions, setCurrentMonth, setCurrentDay, current
     }
   };
 
-  const handleDateClick = (dateInfo: DateClickArg) => {
-    // console.log(dateInfo);
-    setCurrentDay(dateInfo.dateStr);
-  };
-
   return (
     <FullCalendar
       locale={jaLocale}
@@ -85,7 +88,7 @@ const Calender = ({ monthlyTransactions, setCurrentMonth, setCurrentDay, current
       events={[...calenderEvents, backgroundEvent]}
       eventContent={renderEventContent}
       datesSet={handleDateSet}
-      dateClick={handleDateClick}
+      dateClick={onDateClick}
     />
   );
 };
